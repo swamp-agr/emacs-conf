@@ -57,34 +57,36 @@
 (defun nxml-filter (node-name attr-name)
   "Display filtering XML by two level structure"
   (interactive "sEnter node name: \nsEnter attribute name: ")
-  (let (start end new-buffer error-msg t-parent-name error-s)
-    (setq new-buffer (get-buffer-create "temp"))
+  (let (start end parent-buffer 
+	      child-buffer error-msg 
+	      t-parent-name error-s)
+    (setq parent-buffer (get-buffer-create "temp"))
     (goto-char (point-min))
     (save-excursion
       (while (< (point) (point-max))
 	(search-forward (string-tag node-name))
-
-	;; 4. getting start/end points of region
+	;; searching buffer
 	(nxml-backward-up-element) ;; point to the begin of element
 	(setq start (point)) ;; mark start point
 	(forward-char) ;; move up to one character
 	(setq t-parent-name (xmltok-start-tag-local-name))
 	(nxml-up-element) ;; point to the-end-tag
 	(setq end (point))
-	;; 5. adding region to the buffer
+	;; adding region to buffer
 	(let ((oldbuf (current-buffer)))
 	  (save-current-buffer
-	    (set-buffer new-buffer)
+	    (set-buffer parent-buffer)
 	    (insert-buffer-substring oldbuf start end)))))))
 
 
-  (defun string-tag (str)
-    "Geting tag element from string"
-    (concat "<" str ">"))
+(defun string-tag (str)
+  "Geting tag element from string"
+  (concat "<" str ">"))
 
 ;;+ 0.1 создаю пустой буфер
 ;;+ 0.2 иду в начало документа
 
-; 1. ищу первый родительский элемент
+					; 1. ищу первый родительский элемент
 
 
+(provide 'nxml-addons)
