@@ -57,31 +57,33 @@
 (defun nxml-filter (node-name attr-name)
   "Display filtering XML by two level structure"
   (interactive "sEnter node name: \nsEnter attribute name: ")
-  (let (start end parent-buffer 
+  (let (start-point end parent-buffer 
 	      child-buffer error-msg 
 	      t-child-name error-s)
     (setq parent-buffer (get-buffer-create "temp"))
     (goto-char (point-min))
     (save-excursion
-      (while (< (point) (point-max))
-	(search-forward (string-tag node-name))
+      (while (search-forward (string-tag node-name) nil t)
+	(goto-char (match-end 0))
 	;; searching buffer
 	(nxml-backward-up-element) ;; point to the begin of element
-	(setq start (point)) ;; mark start point
+	(setq start-point (point)) ;; mark start-point point
 	(forward-char) ;; move up to one character
 	(nxml-up-element) ;; point to the-end-tag
 	(setq end (point))
 	;; searching child elements
-	(setq t-child-name (search-in-region attr-name start end))
-	(widen)
+	(setq t-child-name (search-in-region attr-name start-point end))
+;	(widen)
 	(message "attr: %s" t-child-name)
 	;; adding region to buffer
 	(let ((oldbuf (current-buffer)))
 	  (save-current-buffer
 	    (set-buffer parent-buffer)
-	    (insert-buffer-substring oldbuf start end)))
-	(goto-char (start))
-	(nxml-down-element)))))
+	    (insert-buffer-substring oldbuf start-point end)))
+	(goto-char start-point)
+	(nxml-down-element))
+      ;; TODO open new frame and show "temp" buffer
+      )))
 
 (defun search-in-region (attr-node start end)
   "Search string in region"
