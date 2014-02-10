@@ -92,16 +92,8 @@
       (search-forward attr-node)
       (match-string 0))))
   
-
-
 (defun string-tag (str)
   "Geting tag element from string"
   (concat "<" str ">"))
-
-;;+ 0.1 создаю пустой буфер
-;;+ 0.2 иду в начало документа
-
-					; 1. ищу первый родительский элемент
-
 
 (provide 'nxml-addons)
