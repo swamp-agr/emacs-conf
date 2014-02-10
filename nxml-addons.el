@@ -59,7 +59,7 @@
   (interactive "sEnter node name: \nsEnter attribute name: ")
   (let (start end parent-buffer 
 	      child-buffer error-msg 
-	      t-parent-name error-s)
+	      t-child-name error-s)
     (setq parent-buffer (get-buffer-create "temp"))
     (goto-char (point-min))
     (save-excursion
@@ -69,14 +69,29 @@
 	(nxml-backward-up-element) ;; point to the begin of element
 	(setq start (point)) ;; mark start point
 	(forward-char) ;; move up to one character
-	(setq t-parent-name (xmltok-start-tag-local-name))
 	(nxml-up-element) ;; point to the-end-tag
 	(setq end (point))
+	;; searching child elements
+	(setq t-child-name (search-in-region attr-name start end))
+	(widen)
+	(message "attr: %s" t-child-name)
 	;; adding region to buffer
 	(let ((oldbuf (current-buffer)))
 	  (save-current-buffer
 	    (set-buffer parent-buffer)
-	    (insert-buffer-substring oldbuf start end)))))))
+	    (insert-buffer-substring oldbuf start end)))
+	(goto-char (start))
+	(nxml-down-element)))))
+
+(defun search-in-region (attr-node start end)
+  "Search string in region"
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      (goto-char (point-min))
+      (search-forward attr-node)
+      (match-string 0))))
+  
 
 
 (defun string-tag (str)
