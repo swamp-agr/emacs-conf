@@ -54,10 +54,10 @@
 	    (message "/%s" (mapconcat 'identity path "/"))
 	  (format "/%s" (mapconcat 'identity path "/")))))))
 
-(defun nxml-filter (node-name attr-name)
+(defun nxml-filter (node-string attr-string)
   "Display filtering XML by parent node and one of child nodes"
   (interactive "sEnter node name: \nsEnter attribute name: ")
-  (let (start-point end parent-buffer 
+  (let (start end parent-buffer start-region end-region
 	      error-msg t-child-name error-s)
     ;; create new buffer
     (setq parent-buffer (get-buffer-create "temp")) 
@@ -68,34 +68,47 @@
     ;; main part
     (goto-char (point-min))
     (save-excursion
-      (while (search-forward node-name nil t)
-	;; searching buffer
+      (while (search-forward node-string nil t)
 	(goto-char (match-end 0))
-	;; TODO implement search by node value
 	(nxml-backward-up-element) ;; point to the begin of element
-	(setq start-point (point)) ;; mark start-point point
+	(setq start-region (point)) ;; mark start-point point
 	(forward-char) ;; move up to one character
 	(nxml-up-element) ;; point to the-end-tag
+	(setq end-region (point))
+	(nxml-backward-element)
+	(beginning-of-line)
+	(setq start (point))
+	(end-of-line)
 	(setq end (point))
-	;; searching child elements
-	(setq t-child-name (search-in-region attr-name start-point end))
-	;; adding region to buffer
+	(insert-outer-buffer-substr parent-buffer start end)
+	(save-excursion
+	  (save-restriction
+	    (narrow-to-region start-region end-region)
+	    (goto-char (point-min))
+	    (while (search-forward attr-string nil t)
+	      (goto-char (match-end 0))
+	      (nxml-backward-up-element)
+	      (beginning-of-line)
+	      (setq start (point))
+	      (end-of-line)
+	      (setq end (point))
+	      (insert-outer-buffer-substr parent-buffer start end))))
+	(goto-char end-region)
+	(beginning-of-line)
+	(setq start (point))
+	(end-of-line)
+	(setq end (point))
+	(insert-outer-buffer-substr parent-buffer start end)
+      ;; TODO open new frame and show "temp" buffer
+      ))))
+
+(defun insert-outer-buffer-substr (buffer start end)
+  "insert substring from region of current buffer to buffer"
 	(let ((oldbuf (current-buffer)))
 	  (save-current-buffer
-	    (set-buffer parent-buffer)
-	    (insert-buffer-substring oldbuf start-point end)))
-	(goto-char start-point)
-	(nxml-down-element))
-      ;; TODO open new frame and show "temp" buffer
-      )))
-
-(defun search-in-region (attr-node start end)
-  "Search string in region"
-  (save-excursion
-    (save-restriction
-      (narrow-to-region start end)
-      (goto-char (point-min))
-      (search-forward attr-node)
-      (match-string 0))))
+	    (set-buffer buffer)
+	    (insert-buffer-substring oldbuf start end)
+	    (newline))))
+  
 
 (provide 'nxml-addons)
