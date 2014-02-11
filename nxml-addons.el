@@ -55,17 +55,23 @@
 	  (format "/%s" (mapconcat 'identity path "/")))))))
 
 (defun nxml-filter (node-name attr-name)
-  "Display filtering XML by two level structure"
+  "Display filtering XML by parent node and one of child nodes"
   (interactive "sEnter node name: \nsEnter attribute name: ")
   (let (start-point end parent-buffer 
-	      child-buffer error-msg 
-	      t-child-name error-s)
-    (setq parent-buffer (get-buffer-create "temp"))
+	      error-msg t-child-name error-s)
+    ;; create new buffer
+    (setq parent-buffer (get-buffer-create "temp")) 
+    ;; erase new buffer (repeating eval fixed)
+    (save-current-buffer
+      (set-buffer parent-buffer)
+      (erase-buffer))
+    ;; main part
     (goto-char (point-min))
     (save-excursion
-      (while (search-forward (string-tag node-name) nil t)
-	(goto-char (match-end 0))
+      (while (search-forward node-name nil t)
 	;; searching buffer
+	(goto-char (match-end 0))
+	;; TODO implement search by node value
 	(nxml-backward-up-element) ;; point to the begin of element
 	(setq start-point (point)) ;; mark start-point point
 	(forward-char) ;; move up to one character
@@ -73,8 +79,6 @@
 	(setq end (point))
 	;; searching child elements
 	(setq t-child-name (search-in-region attr-name start-point end))
-;	(widen)
-	(message "attr: %s" t-child-name)
 	;; adding region to buffer
 	(let ((oldbuf (current-buffer)))
 	  (save-current-buffer
@@ -93,9 +97,5 @@
       (goto-char (point-min))
       (search-forward attr-node)
       (match-string 0))))
-  
-(defun string-tag (str)
-  "Geting tag element from string"
-  (concat "<" str ">"))
 
 (provide 'nxml-addons)
