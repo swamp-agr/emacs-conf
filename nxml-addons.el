@@ -37,7 +37,7 @@
 
 
 (defun nxml-where ()
-  "Display the hierarchy of XML elements the point is on as a path."
+  "Display the XPath-proto from the current point."
   (interactive)
   (let ((path nil))
     (save-excursion
@@ -55,7 +55,10 @@
 	  (format "/%s" (mapconcat 'identity path "/")))))))
 
 (defun nxml-filter (node-string attr-string)
-  "Display filtering XML by parent node and one of child nodes"
+  "Display filtering XML by main element and one of child elements:
+here element can be anything: container, node with or without value, with or without any attributes.
+We search any elements in any parent container' elements and returns concurrences if they exist.
+"
   (interactive "sEnter node name: \nsEnter attribute name: ")
   (let (start end parent-buffer start-region end-region
 	      error-msg t-child-name error-s)
