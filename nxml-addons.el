@@ -1,10 +1,10 @@
 
-;;; xml-analyzer.el --- XML analyzing tools
+;;; nxml-addons.el --- XML analyzing tools
 
 ;; Copyright (C) 2014 Andrey Prokopenko <persiantiger@yandex.ru>
 
 ;; Version: 0.0.1
-;; Keywords: xml analysis tool
+;; Keywords: xml analysis tool, XPath, XML Filter
 ;; Author: Andrey Prokopenko <persiantiger@yandex.ru>
 ;; URL: 
 
@@ -26,13 +26,16 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
+;;
 ;; This plugin requires `nxhtml` plugin to work correctly
+;; You can download it from: http://ourcomments.org/cgi-bin/emacsw32-dl-latest.pl
 
 (load "~/.emacs.d/nxhtml/autostart.el")
 ;; Please read README files for any relevant help.
 
 ;;; Thanks
-
+;; Alexander Syromyatnikov, Alexander Kovalev, Alexander Lesnyakov, 
+;; Daniil Chernopolsky, Irina Kuznetsova, Andrew Safronov
 ;; All the users motivated me to write this stuff.
 
 
@@ -106,6 +109,9 @@ We search any elements in any parent container' elements and returns concurrence
 	    (set-buffer buffer)
 	    (insert-buffer-substring oldbuf start end)
 	    )))
-  
+
+;; key bindings
+(global-set-key (kbd "C-x w") 'nxml-where)
+(global-set-key (kbd "C-x f") 'nxml-filter)
 
 (provide 'nxml-addons)
