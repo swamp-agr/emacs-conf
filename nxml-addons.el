@@ -60,49 +60,43 @@ here element can be anything: container, node with or without value, with or wit
 We search any elements in any parent container' elements and returns concurrences if they exist.
 "
   (interactive "sEnter node name: \nsEnter attribute name: ")
-  (let (start end parent-buffer start-region end-region
-	      error-msg t-child-name error-s)
+  ;; begin
+  (let (start end parent-buffer close-tag error-s)
     ;; create new buffer
     (setq parent-buffer (get-buffer-create "temp")) 
     ;; erase new buffer (repeating eval fixed)
     (save-current-buffer
       (set-buffer parent-buffer)
       (erase-buffer))
+    ;; close-tag
+    (string-match ".*?<\\([^> ]*\\).*?>" node-string)
+    (setq close-tag (concat "</" (format "%s" (match-string 1 node-string)) ">"))
+
     ;; main part
     (goto-char (point-min))
     (save-excursion
       (while (search-forward node-string nil t)
-	(goto-char (match-end 0))
-	(nxml-backward-up-element) ;; point to the begin of element
-	(setq start-region (point)) ;; mark start-point point
-	(forward-char) ;; move up to one character
-	(nxml-up-element) ;; point to the-end-tag
-	(setq end-region (point))
-	(nxml-backward-element)
-	(beginning-of-line)
-	(setq start (point))
-	(end-of-line)
-	(setq end (point))
-	(insert-outer-buffer-substr parent-buffer start end)
-	(save-excursion
-	  (save-restriction
-	    (narrow-to-region start-region end-region)
-	    (goto-char (point-min))
-	    (while (search-forward attr-string nil t)
-	      (goto-char (match-end 0))
-	      (nxml-backward-up-element)
-	      (beginning-of-line)
-	      (setq start (point))
-	      (end-of-line)
-	      (setq end (point))
-	      (insert-outer-buffer-substr parent-buffer start end))))
-	(goto-char end-region)
-	(beginning-of-line)
-	(setq start (point))
-	(end-of-line)
-	(setq end (point))
-	(insert-outer-buffer-substr parent-buffer start end)
-      ;; TODO open new frame and show "temp" buffer
+    	(beginning-of-line)
+    	(setq start (point))
+    	(next-line)
+    	(setq end (point))
+    	(insert-outer-buffer-substr parent-buffer start end)
+	
+    	(while (search-forward close-tag nil t)
+    	  (while (search-forward attr-string nil t)
+    	    (beginning-of-line)
+    	    (setq start (point))
+    	    (next-line)
+    	    (setq end (point))
+    	    (insert-outer-buffer-substr parent-buffer start end))
+    	  (beginning-of-line)
+    	  (setq start (point))
+    	  (next-line)
+    	  (setq end (point))
+    	  (insert-outer-buffer-substr parent-buffer start end))	  
+	(message "Done!")
+	;; popping result
+	(pop-to-buffer "temp")
       ))))
 
 (defun insert-outer-buffer-substr (buffer start end)
@@ -111,7 +105,7 @@ We search any elements in any parent container' elements and returns concurrence
 	  (save-current-buffer
 	    (set-buffer buffer)
 	    (insert-buffer-substring oldbuf start end)
-	    (newline))))
+	    )))
   
 
 (provide 'nxml-addons)
