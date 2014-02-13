@@ -33,10 +33,12 @@
 (load "~/.emacs.d/nxhtml/autostart.el")
 ;; Please read README files for any relevant help.
 
-;;; Thanks
+;;; Thanks to
 ;; Alexander Syromyatnikov, Alexander Kovalev, Alexander Lesnyakov, 
-;; Daniil Chernopolsky, Irina Kuznetsova, Andrew Safronov
-;; All the users motivated me to write this stuff.
+;; Daniil Chernopolsky, Irina Kuznetsova, Andrew Safronov 
+;; and especially thanks to my wife.
+;;
+;; All of You motivated me to write this stuff.
 
 
 (defun nxml-where ()
@@ -62,7 +64,7 @@
 here element can be anything: container, node with or without value, with or without any attributes.
 We search any elements in any parent container' elements and returns concurrences if they exist.
 "
-  (interactive "sEnter node name: \nsEnter attribute name: ")
+  (interactive "sInput string of parent element: \nsInput string of child element: ")
   ;; begin
   (let (start end parent-buffer close-tag error-s)
     ;; create new buffer
@@ -73,34 +75,33 @@ We search any elements in any parent container' elements and returns concurrence
       (erase-buffer))
     ;; close-tag
     (string-match ".*?<\\([^> ]*\\).*?>" node-string)
-    (setq close-tag (concat "</" (format "%s" (match-string 1 node-string)) ">"))
+    (setq close-tag (format "</%s>" (match-string 1 node-string)))
 
     ;; main part
     (goto-char (point-min))
-    (save-excursion
-      (while (search-forward node-string nil t)
-    	(beginning-of-line)
-    	(setq start (point))
-    	(next-line)
-    	(setq end (point))
-    	(insert-outer-buffer-substr parent-buffer start end)
-	
-    	(while (search-forward close-tag nil t)
-    	  (while (search-forward attr-string nil t)
-    	    (beginning-of-line)
-    	    (setq start (point))
-    	    (next-line)
-    	    (setq end (point))
-    	    (insert-outer-buffer-substr parent-buffer start end))
-    	  (beginning-of-line)
-    	  (setq start (point))
-    	  (next-line)
-    	  (setq end (point))
-    	  (insert-outer-buffer-substr parent-buffer start end))	  
-	(message "Done!")
-	;; popping result
-	(pop-to-buffer "temp")
-      ))))
+    (while (search-forward node-string nil t)
+      (while (search-forward close-tag nil t)
+	(while (search-forward attr-string nil t)
+	  (beginning-of-line)
+	  (setq start (point))
+	  (end-of-line)
+	  (setq end (point))
+	  (message attr-string)
+	  (insert-outer-buffer-substr parent-buffer start end))
+	(beginning-of-line)
+	(setq start (point))
+	(end-of-line)
+	(setq end (point))
+	(insert-outer-buffer-substr parent-buffer start end))
+      (beginning-of-line)
+      (setq start (point))
+      (end-of-line)
+      (setq end (point))
+      (insert-outer-buffer-substr parent-buffer start end))
+      (message "Done!")
+      ;; popping result
+      (pop-to-buffer "temp")
+      ))
 
 (defun insert-outer-buffer-substr (buffer start end)
   "insert substring from region of current buffer to buffer"
@@ -108,6 +109,7 @@ We search any elements in any parent container' elements and returns concurrence
 	  (save-current-buffer
 	    (set-buffer buffer)
 	    (insert-buffer-substring oldbuf start end)
+	    (newline)
 	    )))
 
 ;; key bindings
