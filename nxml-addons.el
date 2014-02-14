@@ -3,7 +3,7 @@
 
 ;; Copyright (C) 2014 Andrey Prokopenko <persiantiger@yandex.ru>
 
-;; Version: 0.0.1
+;; Version: 0.1.0
 ;; Keywords: xml analysis tool, XPath, XML Filter
 ;; Author: Andrey Prokopenko <persiantiger@yandex.ru>
 ;; URL: 
@@ -66,7 +66,7 @@ We search any elements in any parent container' elements and returns concurrence
 "
   (interactive "sInput string of parent element: \nsInput string of child element: ")
   ;; begin
-  (let (start end parent-buffer close-tag error-s)
+  (let (start end parent-buffer close-tag error-s rs)
     ;; create new buffer
     (setq parent-buffer (get-buffer-create "temp")) 
     ;; erase new buffer (repeating eval fixed)
@@ -79,31 +79,17 @@ We search any elements in any parent container' elements and returns concurrence
 
     ;; main part
     (goto-char (point-min))
-    (while (search-forward close-tag nil t)
+    (while (re-search-forward 
+	    (concat "\\(" 
+		    (regexp-quote close-tag) "\\|" 
+		    (regexp-quote attr-string) "\\|"
+		    (regexp-quote node-string) "\\)") nil t)
 	  (progn (beginning-of-line)
 		 (setq start (point))
 		 (end-of-line)
 		 (setq end (point))
 		 (message attr-string)
-		 (insert-outer-buffer-substr parent-buffer start end)) 
-	  
-	  (if (search-forward close-tag nil t)
-	      (progn (beginning-of-line)
-		     (setq start (point))
-		     (end-of-line)
-		     (setq end (point))
-		     (message attr-string)
-		     (insert-outer-buffer-substr parent-buffer start end))
-	    nil)
-
-	  (if (search-forward attr-string nil t)
-	      (progn (beginning-of-line)
-		     (setq start (point))
-		     (end-of-line)
-		     (setq end (point))
-		     (message attr-string)
-		     (insert-outer-buffer-substr parent-buffer start end))
-	    nil))
+		 (insert-outer-buffer-substr parent-buffer start end)))
 
       (message "Done!")
       ;; popping result
