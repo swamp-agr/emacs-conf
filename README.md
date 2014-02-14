@@ -7,4 +7,4 @@ INSTALLATION
 
 nxml-filter
 
-![screencast](github.com/swamp-agr/emacs-conf/img/screencast.gif)
+![screencast](/img/screencast.gif)
