@@ -3,7 +3,7 @@
 
 ;; Copyright (C) 2014 Andrey Prokopenko <persiantiger@yandex.ru>
 
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Keywords: xml analysis tool, XPath, XML Filter
 ;; Author: Andrey Prokopenko <persiantiger@yandex.ru>
 ;; URL: 
@@ -70,7 +70,7 @@ We search any elements in any parent container' elements and returns concurrence
 "
   (interactive "sInput string of parent element: \nsInput string of child element: ")
   ;; begin
-  (let (start end parent-buffer node-close-tag attr-close-tag is-node-closed is-attr-closed level pattern)
+  (let (start end parent-buffer node-close-tag attr-close-tag is-node-closed is-attr-closed level pattern cntr-1 cntr-2)
     ;; create new buffer
     (setq parent-buffer (get-buffer-create "temp")) 
     ;; erase new buffer (repeating eval fixed)
@@ -91,6 +91,9 @@ We search any elements in any parent container' elements and returns concurrence
 	  (if (string-match attr-close-tag attr-string)
 	      (setq is-attr-closed 1)
 	    (setq is-attr-closed 0))))
+
+    (setq cntr-1 0)
+    (setq cntr-2 0)
 
     ;; setting level of regexp
     (setq level 
@@ -124,10 +127,10 @@ We search any elements in any parent container' elements and returns concurrence
 		 (setq start (point))
 		 (end-of-line)
 		 (setq end (point))
-		 (message attr-string)
+		 (if (string-match (regexp-quote node-string) (buffer-substring start end)) (setq cntr-1 (+ 1 cntr-1)))
+		 (if (string-match (regexp-quote attr-string) (buffer-substring start end)) (setq cntr-2 (+ 1 cntr-2)))
 		 (insert-outer-buffer-substr parent-buffer start end)))
-
-      (message "Done!")
+      (message (format "Done: %d nodes, %d attributes!" cntr-1 cntr-2))
       ;; popping result
       (pop-to-buffer "temp")
       ))
