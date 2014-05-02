@@ -3,7 +3,7 @@
 
 ;; Copyright (C) 2014 Andrey Prokopenko <persiantiger@yandex.ru>
 
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Keywords: xml analysis tool, XPath, XML Filter
 ;; Author: Andrey Prokopenko <persiantiger@yandex.ru>
 ;; URL: 
@@ -56,8 +56,12 @@
 		      (error nil)))
 	  (setq path (cons (xmltok-start-tag-local-name) path)))
 	(if (called-interactively-p t)
-	    (message "/%s" (mapconcat 'identity path "/"))
+	    (progn (message "/%s" (mapconcat 'identity path "/"))
+		   ;; added result xpath-proto to clipboard
+		   (kill-new 
+		    (format "/%s" (mapconcat 'identity path "/"))))
 	  (format "/%s" (mapconcat 'identity path "/")))))))
+
 
 (defun nxml-filter (node-string attr-string)
   "Display filtering XML by main element and one of child elements:
@@ -66,7 +70,7 @@ We search any elements in any parent container' elements and returns concurrence
 "
   (interactive "sInput string of parent element: \nsInput string of child element: ")
   ;; begin
-  (let (start end parent-buffer close-tag error-s rs)
+  (let (start end parent-buffer node-close-tag attr-close-tag is-node-closed is-attr-closed level pattern)
     ;; create new buffer
     (setq parent-buffer (get-buffer-create "temp")) 
     ;; erase new buffer (repeating eval fixed)
@@ -74,16 +78,48 @@ We search any elements in any parent container' elements and returns concurrence
       (set-buffer parent-buffer)
       (erase-buffer))
     ;; close-tag
-    (string-match ".*?<\\([^> ]*\\).*?>" node-string)
-    (setq close-tag (format "</%s>" (match-string 1 node-string)))
+    (if (string-match ".*?<\\([^> ]*\\).*?>" node-string)
+	(progn 
+	  (setq node-close-tag (format "</%s>" (match-string 1 node-string)))
+	  (if (string-match node-close-tag node-string)
+	      (setq is-node-closed 1)
+	    (setq is-node-closed 0))))
 
+    (if (string-match ".*?<\\([^> ]*\\).*?>" attr-string)
+	(progn 
+	  (setq attr-close-tag (format "</%s>" (match-string 1 attr-string)))
+	  (if (string-match attr-close-tag attr-string)
+	      (setq is-attr-closed 1)
+	    (setq is-attr-closed 0))))
+
+    ;; setting level of regexp
+    (setq level 
+	  (cond ((and (= is-node-closed 0) (= is-attr-closed 0)) 1)
+		((and (= is-node-closed 0) (= is-attr-closed 1)) 2)
+		((and (= is-node-closed 1) (= is-attr-closed 0)) 3)
+		((and (= is-node-closed 1) (= is-attr-closed 1)) 4)))
+
+    (setq pattern 
+	  (cond ((= level 1) (concat "\\(" (regexp-quote node-string)
+				     "\\|" (regexp-quote attr-string)
+				     "\\|" (regexp-quote node-close-tag)
+				     "\\|" (regexp-quote attr-close-tag)
+				     "\\)"))
+		((= level 2) (concat "\\(" (regexp-quote node-string)
+				     "\\|" (regexp-quote attr-string)
+				     "\\|" (regexp-quote node-close-tag)
+				     "\\)"))
+		((= level 3) (concat "\\(" (regexp-quote node-string)
+				     "\\|" (regexp-quote attr-string)
+				     "\\|" (regexp-quote attr-close-tag)
+				     "\\)"))
+		((= level 4) (concat "\\(" (regexp-quote node-string)
+				     "\\|" (regexp-quote attr-string)
+				     "\\)"))))
+	  
     ;; main part
     (goto-char (point-min))
-    (while (re-search-forward 
-	    (concat "\\(" 
-		    (regexp-quote close-tag) "\\|" 
-		    (regexp-quote attr-string) "\\|"
-		    (regexp-quote node-string) "\\)") nil t)
+    (while (re-search-forward pattern nil t)
 	  (progn (beginning-of-line)
 		 (setq start (point))
 		 (end-of-line)
@@ -110,3 +146,5 @@ We search any elements in any parent container' elements and returns concurrence
 (global-set-key (kbd "C-x f") 'nxml-filter)
 
 (provide 'nxml-addons)
+
+
